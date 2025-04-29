@@ -3,247 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Чат с нейросетью</title>
+    <title>Простой чат-бот</title>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            background-color: #f5f5f5;
-            color: #333;
-        }
-
-        .container {
-            max-width: 800px;
+            font-family: Arial, sans-serif;
+            max-width: 600px;
             margin: 0 auto;
             padding: 20px;
+            background-color: #f5f5f5;
         }
-
-        header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        header h1 {
-            color: #2c3e50;
-        }
-
         .chat-container {
             background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
             overflow: hidden;
         }
-
-        .chat-history {
-            height: 500px;
-            overflow-y: auto;
-            padding: 20px;
+        .chat-header {
+            background: #4285f4;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 20px;
         }
-
+        .chat-messages {
+            height: 400px;
+            overflow-y: auto;
+            padding: 15px;
+        }
         .message {
             margin-bottom: 15px;
             padding: 10px 15px;
             border-radius: 18px;
             max-width: 70%;
+            word-wrap: break-word;
         }
-
         .user-message {
             background: #e3f2fd;
             margin-left: auto;
             border-bottom-right-radius: 5px;
         }
-
-        .ai-message {
+        .bot-message {
             background: #f1f1f1;
             margin-right: auto;
             border-bottom-left-radius: 5px;
         }
-
-        .input-area {
+        .chat-input {
             display: flex;
-            flex-direction: column;
-            padding: 15px;
+            padding: 10px;
             border-top: 1px solid #eee;
         }
-
-        textarea {
-            width: 100%;
+        #user-input {
+            flex: 1;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
-            resize: none;
-            min-height: 60px;
-            margin-bottom: 10px;
-            font-family: inherit;
+            outline: none;
         }
-
-        button {
-            padding: 10px 15px;
-            background-color: #4285f4;
+        #send-button {
+            margin-left: 10px;
+            padding: 10px 20px;
+            background: #4285f4;
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s;
         }
-
-        button:hover {
-            background-color: #3367d6;
-        }
-
-        #clear-button {
-            background-color: #f44336;
-            margin-top: 10px;
-        }
-
-        #clear-button:hover {
-            background-color: #d32f2f;
-        }
-
-        footer {
-            text-align: center;
-            margin-top: 30px;
-            color: #777;
-            font-size: 14px;
-        }
-
-        .typing-indicator {
-            display: inline-block;
-            padding: 10px 15px;
-            background: #f1f1f1;
-            border-radius: 18px;
-            margin-bottom: 15px;
-        }
-
-        .typing-indicator span {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            background: #666;
-            border-radius: 50%;
-            margin: 0 2px;
-            animation: typing 1s infinite ease-in-out;
-        }
-
-        .typing-indicator span:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-
-        .typing-indicator span:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-
-        @keyframes typing {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-5px); }
+        #send-button:hover {
+            background: #3367d6;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Чат с нейросетью</h1>
-            <p>Задавайте вопросы и получайте интеллектуальные ответы</p>
-        </header>
-        
-        <div class="chat-container">
-            <div id="chat-history" class="chat-history"></div>
-            
-            <div class="input-area">
-                <textarea id="user-input" placeholder="Введите ваш вопрос здесь..."></textarea>
-                <button id="send-button">Отправить</button>
-                <button id="clear-button">Очистить чат</button>
+    <div class="chat-container">
+        <div class="chat-header">
+            Простой чат-бот
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            <div class="message bot-message">
+                Привет! Я простой чат-бот. Напиши мне что-нибудь.
             </div>
         </div>
-        
-        <footer>
-            <p>© 2023 Чат с нейросетью. Все права защищены.</p>
-        </footer>
+        <div class="chat-input">
+            <input type="text" id="user-input" placeholder="Введите сообщение...">
+            <button id="send-button">Отправить</button>
+        </div>
     </div>
-    
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const chatHistory = document.getElementById('chat-history');
+            const chatMessages = document.getElementById('chat-messages');
             const userInput = document.getElementById('user-input');
             const sendButton = document.getElementById('send-button');
-            const clearButton = document.getElementById('clear-button');
-            
+
             // Функция для добавления сообщения в чат
-            function addMessage(content, isUser) {
+            function addMessage(text, isUser) {
                 const messageDiv = document.createElement('div');
-                messageDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
-                messageDiv.textContent = content;
-                chatHistory.appendChild(messageDiv);
-                chatHistory.scrollTop = chatHistory.scrollHeight;
+                messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+                messageDiv.textContent = text;
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
             }
-            
-            // Функция для показа индикатора набора текста
-            function showTypingIndicator() {
-                const typingDiv = document.createElement('div');
-                typingDiv.className = 'typing-indicator';
-                typingDiv.id = 'typing-indicator';
-                typingDiv.innerHTML = '<span></span><span></span><span></span>';
-                chatHistory.appendChild(typingDiv);
-                chatHistory.scrollTop = chatHistory.scrollHeight;
-            }
-            
-            // Функция для скрытия индикатора набора текста
-            function hideTypingIndicator() {
-                const typingDiv = document.getElementById('typing-indicator');
-                if (typingDiv) {
-                    typingDiv.remove();
+
+            // Функция обработки сообщений пользователя
+            function processUserMessage(message) {
+                const lowerMessage = message.toLowerCase();
+                
+                // Ответы бота на разные фразы
+                if (lowerMessage.includes('привет') || lowerMessage.includes('здравствуй')) {
+                    return "Привет! Как дела?";
+                } else if (lowerMessage.includes('как дела') || lowerMessage.includes('как ты')) {
+                    return "У меня всё отлично! А у тебя?";
+                } else if (lowerMessage.includes('хорошо') || lowerMessage.includes('отлично')) {
+                    return "Это замечательно!";
+                } else if (lowerMessage.includes('плохо') || lowerMessage.includes('не очень')) {
+                    return "Не расстраивайся! Всё наладится.";
+                } else if (lowerMessage.includes('что ты умеешь')) {
+                    return "Я могу отвечать на простые фразы, такие как 'привет', 'как дела' и другие.";
+                } else if (lowerMessage.includes('пока') || lowerMessage.includes('до свидания')) {
+                    return "До свидания! Возвращайся ещё!";
+                } else if (lowerMessage.includes('спасибо') || lowerMessage.includes('благодарю')) {
+                    return "Пожалуйста! Рад был помочь.";
+                } else if (lowerMessage.includes('как тебя зовут')) {
+                    return "Я просто чат-бот, у меня нет имени.";
+                } else if (lowerMessage.includes('время') || lowerMessage.includes('число')) {
+                    const now = new Date();
+                    return `Сейчас ${now.toLocaleTimeString()}, ${now.toLocaleDateString()}`;
+                } else {
+                    return "Извини, я не понял твоего сообщения. Я всего лишь простой бот.";
                 }
             }
-            
-            // Функция для отправки сообщения
-            async function sendMessage() {
+
+            // Обработчик отправки сообщения
+            function sendMessage() {
                 const message = userInput.value.trim();
                 if (message === '') return;
                 
-                // Добавляем сообщение пользователя
                 addMessage(message, true);
                 userInput.value = '';
                 
-                // Показываем индикатор набора текста
-                showTypingIndicator();
-                
-                try {
-                    // Здесь должен быть вызов к API нейросети
-                    // Вместо этого мы используем имитацию ответа
-                    setTimeout(() => {
-                        hideTypingIndicator();
-                        const responses = [
-                            "Интересный вопрос! Я нейросеть и могу помочь с различными темами.",
-                            "Я обрабатываю ваш запрос. Можете уточнить детали?",
-                            "Это сложный вопрос. Давайте разберём его по частям.",
-                            "Я могу предложить несколько вариантов решения этой проблемы.",
-                            "Благодарю за ваш вопрос! Вот что я могу сказать по этому поводу."
-                        ];
-                        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-                        addMessage(randomResponse, false);
-                    }, 1500);
-                } catch (error) {
-                    hideTypingIndicator();
-                    addMessage("Произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте позже.", false);
-                    console.error('Ошибка:', error);
-                }
+                // Имитация задержки ответа бота
+                setTimeout(() => {
+                    const botResponse = processUserMessage(message);
+                    addMessage(botResponse, false);
+                }, 500);
             }
-            
+
             // Обработчики событий
             sendButton.addEventListener('click', sendMessage);
             
             userInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
+                if (e.key === 'Enter') {
                     sendMessage();
                 }
-            });
-            
-            clearButton.addEventListener('click', function() {
-                chatHistory.innerHTML = '';
             });
         });
     </script>
